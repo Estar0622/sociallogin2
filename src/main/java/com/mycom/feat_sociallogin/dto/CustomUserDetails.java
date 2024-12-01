@@ -1,18 +1,17 @@
 package com.mycom.feat_sociallogin.dto;
 
-import com.mycom.feat_sociallogin.entity.UserEntity;
+import com.mycom.feat_sociallogin.entity.MemberEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private final UserEntity userEntity;
-
-    public CustomUserDetails(UserEntity userEntity) {
-        this.userEntity = userEntity;
-    }
+    private final MemberEntity memberEntity;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -36,7 +35,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         // 사용자 이름 대신 providerId를 고유 식별자로 반환
-        return userEntity.getProvider() + "_" + userEntity.getProviderId();
+        return memberEntity.getProvider() + "_" + memberEntity.getProviderId();
     }
 
     @Override

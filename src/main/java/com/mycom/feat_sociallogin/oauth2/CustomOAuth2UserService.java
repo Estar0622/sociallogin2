@@ -4,8 +4,8 @@ import com.mycom.feat_sociallogin.dto.GoogleResponse;
 import com.mycom.feat_sociallogin.dto.KakaoResponse;
 import com.mycom.feat_sociallogin.dto.OAuth2Response;
 import com.mycom.feat_sociallogin.dto.UserDTO;
-import com.mycom.feat_sociallogin.entity.UserEntity;
-import com.mycom.feat_sociallogin.repository.UserRepository;
+import com.mycom.feat_sociallogin.entity.MemberEntity;
+import com.mycom.feat_sociallogin.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
-    public CustomOAuth2UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public CustomOAuth2UserService(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -40,21 +40,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // UserEntity 저장 또는 업데이트
-        UserEntity userEntity = saveOrUpdateUser(oAuth2Response);
+        MemberEntity memberEntity = saveOrUpdateUser(oAuth2Response);
 
         // UserDTO 생성 및 반환
         UserDTO userDTO = new UserDTO();
-        userDTO.setProvider(userEntity.getProvider());
-        userDTO.setProviderId(userEntity.getProviderId());
-        userDTO.setNickname(userEntity.getNickname());
-        userDTO.setProfileImage(userEntity.getProfileImage());
-        userDTO.setEmail(userEntity.getEmail());
+        userDTO.setProvider(memberEntity.getProvider());
+        userDTO.setProviderId(memberEntity.getProviderId());
+        userDTO.setNickname(memberEntity.getNickname());
+        userDTO.setProfileImage(memberEntity.getProfileImage());
+        userDTO.setEmail(memberEntity.getEmail());
 
 
         return new CustomOAuth2User(userDTO);
     }
 
-    private UserEntity saveOrUpdateUser(OAuth2Response oAuth2Response) {
+    private MemberEntity saveOrUpdateUser(OAuth2Response oAuth2Response) {
         String provider = oAuth2Response.getProvider();
         String providerId = oAuth2Response.getProviderId();
         String email = oAuth2Response.getEmail();
@@ -66,30 +66,30 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         log.info("Social login request: provider={}, providerId={}, email={}", provider, providerId, email);
 
-        UserEntity userEntity = userRepository.findByProviderAndProviderId(provider, providerId);
+        MemberEntity memberEntity = memberRepository.findByProviderAndProviderId(provider, providerId);
 
-        if (userEntity == null) {
+        if (memberEntity == null) {
             // 새 사용자 저장
-            userEntity = new UserEntity();
-            userEntity.setProvider(provider);
-            userEntity.setProviderId(providerId);
-            userEntity.setEmail(email);
-            userEntity.setNickname(oAuth2Response.getName());
+            memberEntity = new MemberEntity();
+            memberEntity.setProvider(provider);
+            memberEntity.setProviderId(providerId);
+            memberEntity.setEmail(email);
+            memberEntity.setNickname(oAuth2Response.getName());
 
-            userRepository.save(userEntity);
+            memberRepository.save(memberEntity);
 
-            log.info("New user registered: {}", userEntity);  // 새 사용자 등록 로그
+            log.info("New user registered: {}", memberEntity);  // 새 사용자 등록 로그
         } else {
             // 기존 사용자 업데이트
-            userEntity.setEmail(email);
-            userEntity.setNickname(oAuth2Response.getName());
-            userRepository.save(userEntity);
+            memberEntity.setEmail(email);
+            memberEntity.setNickname(oAuth2Response.getName());
+            memberRepository.save(memberEntity);
 
-            log.info("Existing user updated: {}", userEntity);  // 기존 사용자 업데이트 로그
+            log.info("Existing user updated: {}", memberEntity);  // 기존 사용자 업데이트 로그
         }
 
 
-        return userEntity;
+        return memberEntity;
     }
 
 }

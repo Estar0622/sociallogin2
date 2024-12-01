@@ -10,7 +10,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class UserEntity {
+public class MemberEntity /* implements UserDetails */ {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,4 +21,5 @@ public class UserEntity {
     private String nickname;      // 사용자의 닉네임
     private String profileImage;  // 프로필 이미지 URL
     private String email;         // 사용자 이메일
+
 }
