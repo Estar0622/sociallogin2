@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -31,12 +32,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // FIXME: csrf, formLogin, httpBasic 은 자바 메서드 참조 문법으로 아래처럼 간결하게 표현 가능
                 // CSRF 비활성화 (REST API 스타일에서는 보통 사용하지 않음)
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 // 폼 로그인 비활성화 (소셜 로그인만 사용)
-                .formLogin(formLogin -> formLogin.disable())
+                .formLogin(AbstractHttpConfigurer::disable)
                 // HTTP 기본 인증 비활성화
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .httpBasic(AbstractHttpConfigurer::disable)
+
                 // CORS 설정
                 .cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
@@ -49,6 +52,8 @@ public class SecurityConfig {
                 }))
                 // 소셜 로그인 설정
                 .oauth2Login(oauth2 -> oauth2
+                        // FIXME: OAuth2 로그인 인증 성공 시 리디렉션할 기본 URL 설정
+                        // .defaultSuccessUrl("/")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) // 사용자 정보 처리
                         .successHandler(customSuccessHandler)) // 로그인 성공 시 처리
                 // JWT 인증 필터 추가
@@ -59,7 +64,8 @@ public class SecurityConfig {
                 .addFilterBefore(customLogoutFilter, LogoutFilter.class)
                 // 권한별 요청 처리
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/reissue","/","/oauth2/authorization/kakao","/oauth2/authorization/google").permitAll() // 토큰 재발급은 인증 없이 접근 가능
+                            // 토큰 재발급은 인증 없이 접근 가능
+                            .requestMatchers("/reissue","/","/oauth2/authorization/kakao","/oauth2/authorization/google").permitAll()
                         .anyRequest().authenticated()) // 그 외의 요청은 인증 필요
                 // 세션 정책: Stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
