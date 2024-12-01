@@ -1,8 +1,7 @@
 package com.mycom.feat_sociallogin.filter;
 
-
 import com.mycom.feat_sociallogin.dto.CustomUserDetails;
-import com.mycom.feat_sociallogin.entity.UserEntity;
+import com.mycom.feat_sociallogin.entity.MemberEntity;
 import com.mycom.feat_sociallogin.service.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -75,13 +74,13 @@ public class JWTFilter extends OncePerRequestFilter {
         String username = jwtUtil.getUsername(accessToken);
         String role = jwtUtil.getRole(accessToken);
 
-        UserEntity userEntity = new UserEntity();
-        userEntity.setProvider(username);
-        userEntity.setProviderId(username);
-        userEntity.setNickname(username);
+        MemberEntity memberEntity = new MemberEntity();
+        memberEntity.setProvider(username);
+        memberEntity.setProviderId(username);
+        memberEntity.setNickname(username);
 
 // CustomUserDetails 생성
-        CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
+        CustomUserDetails customUserDetails = new CustomUserDetails(memberEntity);
 
 // Authentication 객체 생성
         Authentication authToken = new UsernamePasswordAuthenticationToken(
