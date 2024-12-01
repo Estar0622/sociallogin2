@@ -1,0 +1,14 @@
+services:
+  database:
+    image: mysql:8.3.0
+    platform: linux/x86_64
+    container_name: 'daeng-place-db'
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - .env
+    ports:
+      - 3306:3306
+    volumes:
+      - ~/data/dbms/mysql/conf.d:/etc/mysql/conf.d
