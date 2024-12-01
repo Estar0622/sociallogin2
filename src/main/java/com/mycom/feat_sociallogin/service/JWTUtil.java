@@ -13,6 +13,8 @@ import java.util.Date;
 @Component
 public class JWTUtil {
 
+    private static final int BEARER_PREFIX_LENGTH = 7;
+
     private SecretKey secretKey;
 
     public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
@@ -22,21 +24,22 @@ public class JWTUtil {
 
     public String getUsername(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("username", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token.substring(7)).getPayload().get("username", String.class);
     }
 
     public String getRole(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(getAccessToken(token)).getPayload().get("role", String.class);
     }
 
     public String getCategory(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token.substring(7)).getPayload().get("category", String.class);
     }
 
+    // ERROR: Compact JWT strings may not contain whitespace
     public Boolean isExpired(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(getAccessToken(token)).getPayload().getExpiration().before(new Date());
     }
 
 
@@ -51,4 +54,9 @@ public class JWTUtil {
                 .signWith(secretKey)
                 .compact();
     }
+
+    private static String getAccessToken(String token) {
+        return token.substring(BEARER_PREFIX_LENGTH);
+    }
+
 }

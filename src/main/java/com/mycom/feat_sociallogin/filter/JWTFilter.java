@@ -9,36 +9,37 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
+@Slf4j
+@Component
+@RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
 
-    public JWTFilter(JWTUtil jwtUtil) {
-
-        this.jwtUtil = jwtUtil;
-    }
-
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
         // 헤더에서 access키에 담긴 토큰을 꺼냄
-        String accessToken = request.getHeader("access");
-        System.out.println(accessToken);
+        // String accessToken = request.getHeader("access");
+        // String accessToken = request.getHeader("Authorization");
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.info("{}{} {}{}Authorization: {}", System.lineSeparator(), request.getMethod(), request.getRequestURI(),
+                System.lineSeparator(), accessToken);
 
         // 토큰이 없다면 다음 필터로 넘김
         if (accessToken == null) {
-
             filterChain.doFilter(request, response);
-
             return;
         }
 

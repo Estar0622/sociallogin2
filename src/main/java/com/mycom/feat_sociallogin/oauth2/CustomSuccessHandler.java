@@ -7,10 +7,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -18,16 +25,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
+@Slf4j
 @Component
-public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+@RequiredArgsConstructor
+// public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
-
-    public CustomSuccessHandler(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
-        this.jwtUtil = jwtUtil;
-        this.refreshRepository = refreshRepository;
-    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -45,13 +50,20 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         // Refresh 토큰 저장
         addRefreshEntity(username, refreshToken, 2592000000L);
-        System.out.println(accessToken);
-        System.out.println(refreshToken);
+        log.info("accessToken: {}", accessToken);
+        log.info("refreshToken: {}", refreshToken);
 
         // 응답 설정: Access는 헤더에, Refresh는 쿠키에 저장
-        response.setHeader("access", accessToken);
+        response.setHeader(HttpHeaders.AUTHORIZATION, accessToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
+
+        RequestCache requestCache = new HttpSessionRequestCache();
+        String redirectUrl = Optional.ofNullable(requestCache.getRequest(request, response))
+                .map(SavedRequest::getRedirectUrl)
+                .orElse("/");
+
+        response.sendRedirect(redirectUrl);
     }
 
     private void addRefreshEntity(String username, String refreshToken, Long expiredMs) {
@@ -67,6 +79,9 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         cookie.setMaxAge(2592000); // 30일
         cookie.setHttpOnly(true);
         cookie.setPath("/");
+
         return cookie;
     }
+
+
 }
